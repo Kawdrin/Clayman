@@ -18,7 +18,7 @@ class Map:
         return self.list
 
     def colocar_bloco(self, bloco_name, x, y):
-        bloco = Sprite(center_x=x*64, center_y=y*64)
-        bloco.scale = 4
+        bloco = Sprite(center_x=x*32+16, center_y=y*32+16)
+        bloco.scale = 2
         bloco.texture = self.tiles[bloco_name]
         return bloco
