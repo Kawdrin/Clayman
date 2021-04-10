@@ -1,6 +1,6 @@
 from arcade import Window
 
-from src.Groups import BackgroundGroup
+from src.Groups import BackgroundGroup, ForegroundGroup, HighgroundGroup
 
 from src.ent.Hero import Hero
 
@@ -28,4 +28,6 @@ class Game(Window):
 
     def on_draw(self):
         cooked_resolution_draw(BackgroundGroup)
+        cooked_resolution_draw(ForegroundGroup)
         cooked_resolution_draw(self.Hero)
+        cooked_resolution_draw(HighgroundGroup)
