@@ -1,6 +1,6 @@
 from arcade import run
+from src import Game
 
-from src.Game import Game
-
-engine = Game(640,640, "ClayMan", update_rate=1/60)
-run()
+if __name__ == "__main__":
+    engine = Game(640,640, "ClayMan", update_rate=1/60)
+    run()
