@@ -4,11 +4,10 @@ from src.Groups import BackgroundGroup, ForegroundGroup, HighgroundGroup
 
 from src.ent.Hero import Hero
 
-from pyglet.gl import glTexParameteri, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_2D, GL_NEAREST, GL_TEXTURE_MAG_FILTER
 
 def cooked_resolution_draw(sprite):
+    from pyglet.gl import glTexParameteri, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_2D, GL_NEAREST, GL_TEXTURE_MAG_FILTER
     sprite.draw()
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
 

@@ -5,10 +5,14 @@ from src.Map import Map
 
 Mapa = Map()
 BackgroundGroup = SpriteList(is_static=True)
-BackgroundGroup.extend(Mapa.create_level(0, ["Bloco", 'bloco_7','bloco_8', 'bloco_9', 'bloco_verde']))
+BackgroundGroup.extend(Mapa.create_level(0, "Back"))
 
 ForegroundGroup = SpriteList(is_static=True)
-ForegroundGroup.extend(Mapa.create_level(0, ["Wall"]))
+ForegroundGroup.extend(Mapa.create_level(0, "Fore"))
 
 HighgroundGroup = SpriteList(is_static=True)
-HighgroundGroup.extend(Mapa.create_level(0, ["Wall_full"]))
+HighgroundGroup.extend(Mapa.create_level(0, "High"))
+
+ColisionGroup = 0
+DetalhesGroup = 0
+EntsGroup = 0
