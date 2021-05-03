@@ -1,107 +1,153 @@
-from arcade import Sprite, load_texture
+from pygame import Rect
+from pygame.sprite import Sprite, spritecollide
+from pygame.transform import scale, flip
+from pygame.locals import K_a, K_w, K_s, K_d
+from pygame.key import get_pressed
 
-from PIL import Image
+from src.sprite_sheet import SpriteSheet
+from src.groups import colisionsGroup, EntidadesGroup
+
 
 class Hero(Sprite):
-    def __init__(self):
-        super().__init__()
-        spritesheet = "res/CreyMan.png"
-        self.position = [32*7, 32*6]
-        self.idle_sprites = [load_texture(spritesheet, 16, 16, 16, 16), load_texture(spritesheet, 32, 16, 16, 16),
-                             load_texture(spritesheet, 48, 16, 16, 16), load_texture(spritesheet, 64, 16, 16, 16)]
+    def __init__(self, pos,*groups):
+        super().__init__(*groups)
+        spr = SpriteSheet("res/CreyMan.png")
+        self.rect = Rect(pos[0], pos[1], 32, 32)
+        self.idle_sprites = [
+            scale(spr.clip_sprite(16, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(32, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(48, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(64, 16, 16, 16), (32, 32))]
 
-        self.run_sprites = [load_texture(spritesheet, 16, 32, 16, 16), load_texture(spritesheet, 32, 32, 16, 16),
-                            load_texture(spritesheet, 48, 32, 16, 16), load_texture(spritesheet, 48, 32, 16, 16),
-                            load_texture(spritesheet, 32, 32, 16, 16), load_texture(spritesheet, 16, 32, 16, 16)]
+        self.run_sprites = [
+            scale(spr.clip_sprite(16, 32, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(32, 32, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(48, 32, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(48, 32, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(32, 32, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(16, 32, 16, 16), (32, 32))]
 
-        self.run_sprites_flipped = [load_texture(spritesheet, 16, 32, 16, 16, flipped_horizontally = True), load_texture(spritesheet, 32, 32, 16, 16, flipped_horizontally = True),
-                            load_texture(spritesheet, 48, 32, 16, 16, flipped_horizontally = True), load_texture(spritesheet, 48, 32, 16, 16, flipped_horizontally = True),
-                            load_texture(spritesheet, 32, 32, 16, 16, flipped_horizontally = True), load_texture(spritesheet, 16, 32, 16, 16, flipped_horizontally = True)]
+        self.grab_item_idle_sprite = [
+            scale(spr.clip_sprite(80, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(96, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(112, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(128, 16, 16, 16), (32, 32))]
 
-        self.texture = self.idle_sprites[0]
-        self.scale = 2
-        self.current_sprite_list = self.idle_sprites
-        self.flipped = False
-        self.current_sprite = 0
-        self.velocity = 2
-        self.parar = 2
+        self.grab_item_run_sprites = [
+            scale(spr.clip_sprite(304, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(320, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(336, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(336, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(320, 16, 16, 16), (32, 32)),
+            scale(spr.clip_sprite(304, 16, 16, 16), (32, 32))]
 
-        self.hitbox = Sprite(center_x = self.center_x, center_y = self.center_y)
-        self.hitbox.texture = load_texture(spritesheet, 19, 72, 8,8)
-        self.hitbox.scale= 2
+        self.hitbox = Sprite()
+        self.hitbox.rect = Rect(self.rect.x+8, self.rect.y+16, 14, 16)
 
-        self.controle = {97:False, 119:False, 115:False, 100:False}
+
         self.pos_x = [True, True]
         self.pos_y = [True, True]
+        self.sprite_change = 0
+        self.current_sprites = self.idle_sprites
 
-    def verifica_colisao(self, controle):
-        from src.Groups import ForegroundGroup
-        for wall in self.hitbox.collides_with_list(ForegroundGroup):
-            if wall.top - self.hitbox.bottom == 2:
-                self.hitbox.bottom = wall.top
-                self.pos_x = [True, True]
+        self.flipped = False
+
+        self.item_grab = False
+        self.item = None
+
+        self.parar = 3
+
+        self.image = self.idle_sprites[0]
+
+    def colision_check(self):
+        for bloco in spritecollide(self.hitbox, colisionsGroup, False):
+            if self.hitbox.rect.bottom- bloco.rect.top == 2:
+                self.hitbox.rect.bottom = bloco.rect.top
                 self.pos_y = [False, True]
-
-            if self.hitbox.top - wall.bottom == 2:
-                self.hitbox.top = wall.bottom
                 self.pos_x = [True, True]
+
+            if bloco.rect.bottom - self.hitbox.rect.top == 2:
+                self.hitbox.rect.top = bloco.rect.bottom
                 self.pos_y = [True, False]
-            if self.hitbox.right - wall.left == 2:
-                self.hitbox.right = wall.left
+                self.pos_x = [True, True]
+
+            if self.hitbox.rect.right - bloco.rect.left == 2:
+                self.hitbox.rect.right = bloco.rect.left
                 self.pos_x = [False, True]
                 self.pos_y = [True, True]
-            if wall.right - self.hitbox.left == 2:
-                self.hitbox.left = wall.right
+
+            if bloco.rect.right - self.hitbox.rect.left == 2:
+                self.hitbox.rect.left = bloco.rect.right
                 self.pos_x = [True, False]
                 self.pos_y = [True, True]
 
-            self.center_x = self.hitbox.center_x
-            self.center_y = self.hitbox.center_y+8
+            self.rect.x = self.hitbox.rect.x - 8
+            self.rect.y = self.hitbox.rect.y - 16
 
-    def movimento(self):
-        if self.controle[97] and self.pos_x[1]:
-            self.center_x -= self.velocity
+
+    def soltar_item(self):
+        if self.item_grab:
+            self.item_grab = False
+            self.item.grab = False
+            self.item.rect.y = self.hitbox.rect.top+11
+
+    def grab_item(self):
+        if self.item_grab == False:
+            for item in spritecollide(self.hitbox, EntidadesGroup, False):
+                if item == self:
+                    continue
+                self.item_grab = True
+                self.item = item
+                item.grab = not item.grab
+                break
+
+    def move(self, keys):
+        if keys[K_a] and self.pos_x[1]:
+            self.rect.x -= 2
             self.flipped = True
-            self.flip(self.run_sprites, self.run_sprites_flipped)
             self.parar = 3
-
-        if self.controle[119] and self.pos_y[1]:
-            self.center_y += self.velocity
-            self.flip(self.run_sprites, self.run_sprites_flipped)
+        if keys[K_s] and self.pos_y[0]:
+            self.rect.y += 2
             self.parar = 3
-
-        if self.controle[115] and self.pos_y[0]:
-            self.center_y -= self.velocity
-            self.flip(self.run_sprites, self.run_sprites_flipped)
+        if keys[K_w] and self.pos_y[1]:
+            self.rect.y -= 2
             self.parar = 3
-
-        if self.controle[100] and self.pos_x[0]:
-            self.center_x += self.velocity
+        if keys[K_d] and self.pos_x[0]:
+            self.rect.x += 2
             self.flipped = False
-            self.flip(self.run_sprites, self.run_sprites_flipped)
             self.parar = 3
 
-        self.hitbox.set_position(self.center_x, self.center_y-8)
-
-    def flip(self, sprite_list, sprite_list_flipped):
-        if self.flipped:
-            self.current_sprite_list = sprite_list_flipped
-        else:
-            self.current_sprite_list = sprite_list
+        self.hitbox.rect.x = self.rect.x+8
+        self.hitbox.rect.y = self.rect.y+16
 
     def update(self):
-        self.current_sprite += 0.1
+        if self.item_grab:
+            self.item.equanto_pego(self)
+
+        self.move(get_pressed())
+
+        if self.parar == 3:
+            if self.item_grab:
+                self.current_sprites = self.grab_item_run_sprites
+            else:
+                self.current_sprites = self.run_sprites
+
+        self.sprite_change += 0.1
         self.parar -= 0.5
 
-        if self.current_sprite >= len(self.current_sprite_list):
-            self.current_sprite = 0
-
-        self.texture = self.current_sprite_list[int(self.current_sprite)]
 
         if self.parar <= 0:
-            self.current_sprite_list = self.idle_sprites
+            if self.item_grab:
+                self.current_sprites = self.grab_item_idle_sprite
+            else:
+                self.current_sprites = self.idle_sprites
 
-        self.movimento()
+        if self.sprite_change >= len(self.current_sprites):
+            self.sprite_change = 0
+
+        self.image = flip(self.current_sprites[int(self.sprite_change)], self.flipped, False)
+
         self.pos_x = [True, True]
         self.pos_y = [True, True]
-        self.verifica_colisao(self.controle)
+
+        self.colision_check()
